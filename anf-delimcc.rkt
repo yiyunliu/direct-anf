@@ -5,10 +5,10 @@
 ;; but in case I forget I'm spelling things out explicitly with prompt0 + control0
 
 ;; input grammar:
-;; exp = num | (- exp) | (let ([x exp]) exp) | (+ exp exp)
+;; exp = num | (- exp) | (let ([var exp]) exp) | (+ exp exp)
 
 ;; output grammar:
-;; aexp = (let ([x cexp]) aexp) | cexp | atom
+;; aexp = (let ([var cexp]) aexp) | cexp | atom
 ;; cexp = (- atom) | (+ atom atom) | atom
 ;; atom = num | var
 
