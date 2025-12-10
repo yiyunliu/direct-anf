@@ -1,8 +1,8 @@
 #lang racket
 (require racket/control)
 
-;; the correct delimited continuation primitive here is prompt + control
-;; but in case I forget I'm spelling things out explicitly with prompt0 + control0
+;; the correct delimited continuation primitive here is reset + shift
+;; I'm spelling things out explicitly with prompt0 + control0 to avoid confusion
 
 ;; input grammar:
 ;; exp = num | (- exp) | (let ([var exp]) exp) | (+ exp exp)
@@ -21,7 +21,7 @@
 (define (exp-anf-atom e)
   (if (atom? e) e
       (let ([x (gensym 'x)])
-        (control0 k `(let ([,x ,(exp-anf-cexp e)]) ,(k x))))))
+        (control0 k (prompt0 `(let ([,x ,(exp-anf-cexp e)]) ,(prompt0 (k x))))))))
 
 #|
 it's quite confusing but for all recursive calls within exp-anf-cexp,
@@ -36,7 +36,7 @@ after the final top-level call to exp-anf-cexp
     [(list '- a)
      (list '- (exp-anf-atom a))]
     [`(let ([,x ,e]) ,body)
-     (control0 k (prompt0 `(let ([,x ,(exp-anf-cexp e)]) ,(k (exp-anf-cexp body)))))]
+     (control0 k (prompt0 `(let ([,x ,(exp-anf-cexp e)]) ,(prompt0 (k (exp-anf-cexp body))))))]
     [(? integer?) e]
     [(? symbol?) e]
     [_ (error (format "invalid syntactic form: ~a" e))]))

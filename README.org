@@ -9,7 +9,7 @@ supports delimited continuations natively!
 Following [[https://matt.might.net/articles/a-normalization/][the Racket CPS-style implementation]] by Matt Might (which is
 ultimately based on Flanagan et al.'s scheme implementation), I wrote
 an ANF conversion algorithm in Racket for a simple language with arithmetic
-operations and let bindings, using the =prompt= and =control=
+operations and let bindings, using the =shift= and =prompt=
 primitives from the Racket standard library.
 
 I've always had trouble understanding functions written in CPS style,
