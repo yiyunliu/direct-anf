@@ -1,8 +1,5 @@
 #lang racket
 
-;; the correct delimited continuation primitive here is reset + shift
-;; I'm spelling things out explicitly with prompt0 + control0 to avoid confusion
-
 ;; input grammar:
 ;; exp = num | (- exp) | (let ([var exp]) exp) | (+ exp exp)
 
@@ -26,12 +23,6 @@
            `(let ([,x ,v])
               ,(k x)))))))
 
-#|
-it's quite confusing but for all recursive calls within exp-anf-cexp,
-it's safe to assume that the result is a cexp.
-the let bindings are all appended to the continuation and only get added
-after the final top-level call to exp-anf-cexp
-|#
 (define (exp-anf-cexp e k)
   (match e
     [(list '+ a b)
