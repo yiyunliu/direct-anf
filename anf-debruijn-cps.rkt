@@ -1,7 +1,5 @@
 #lang racket
 
-(require racket/control)
-
 ;; input grammar:
 ;; exp = num | (- exp) | (let exp exp) | (+ exp exp)
 
@@ -81,45 +79,43 @@
   (lambda (xi e)
     (ctx (compose xi ren-shift) e)))
 
+
 (define/contract (exp-anf-aexp e)
   (-> expr/c aexpr/c)
-  (prompt0
-   (define-values (_ v) (exp-anf-cexp e))
-   v))
+  (exp-anf-cexp e ctx-id))
 
-(define/contract (exp-anf-atom e)
-  (-> expr/c (values ren/c atom?))
-  (cond
-    [(atom? e) (values ren-id e)]
-    [else
-     (control0
-      k
-      (prompt0
-       (define-values (xi v) (exp-anf-cexp e))
-       (define new-body (prompt0 (ctx-apply (ctx-shift k) '(var 0))))
-       `(let ,v ,(ren-exp (ren-lift xi) new-body))))]))
+(define/contract (exp-anf-atom e k)
+  (-> expr/c ctx/c aexpr/c)
+  (if (atom? e) (ctx-apply k e)
+      (exp-anf-cexp
+       e
+       (lambda (xi v)
+         `(let ,v ,(ren-exp (ren-lift xi) (ctx-apply (ctx-shift k) '(var 0))))))))
 
-(define/contract (exp-anf-cexp e)
-  (-> expr/c (values ren/c cexpr/c))
+(define/contract (exp-anf-cexp e k)
+  (-> expr/c ctx/c aexpr/c)
   (match e
     [(list '+ a b)
-     (define-values (r0 va) (exp-anf-atom a))
-     (define-values (r1 vb) (exp-anf-atom (ren-exp r0 b)))
-     (values (compose r1 r0) `(+ ,(ren-exp r1 va) ,vb))]
+     (exp-anf-atom
+      a
+      (lambda (xi0 va)
+        (exp-anf-atom
+         (ren-exp xi0 b)
+         (lambda (xi1 vb)
+           (k (compose xi1 xi0) `(+ ,(ren-exp xi1 va) ,vb))))))]
     [(list '- a)
-     (define-values (r va) (exp-anf-atom a))
-     (values r `(- ,va))]
+     (exp-anf-atom
+      a
+      (lambda (xi va)
+        (k xi `(- ,va))))]
     [`(let ,e ,body)
-     (control0
-      k
-      (prompt0
-       (define-values (r v) (exp-anf-cexp e))
-       `(let ,v
-            ,(ren-exp (ren-lift r)
-                      (prompt0 (call-with-values
-                                (lambda () (exp-anf-cexp body))
-                                (ctx-shift k)))))))]
-    [(? atom?) (values ren-id e)]
+     (exp-anf-cexp
+      e
+      (lambda (xi va)
+        `(let ,va
+             ,(ren-exp (ren-lift xi)
+                       (exp-anf-cexp body (ctx-shift k))))))]
+    [(? atom?) (ctx-apply k e)]
     [_ (error (format "invalid syntactic form: ~a" e))]))
 
 (provide exp-anf-aexp)
