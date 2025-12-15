@@ -9,10 +9,27 @@ supports delimited continuations natively!
 Following [[https://matt.might.net/articles/a-normalization/][the Racket CPS-style implementation]] by Matt Might (which is
 ultimately based on Flanagan et al.'s scheme implementation), I wrote
 an ANF conversion algorithm in Racket for a simple language with arithmetic
-operations and let bindings, using the =shift= and =prompt=
+operations and let bindings, using the =control= and =prompt=
 primitives from the Racket standard library.
 
 I've always had trouble understanding functions written in CPS style,
 and oddly enough, converting it to direct style with delimited
 continuations somehow made the algorithm much easier to understand for
 me.
+* What about de Bruijn?
+I first wrote a CPS-style implementation in
+=anf-debruijn-cps.rkt=. With some trial and error, I implemented a
+direct style version in =anf-debruijn.rkt=. Both implementations turn
+out to be quite unpleasant as one has to deal with a ton of shifting
+to get things right. The shifting needed to make things well-scoped is
+extremely counterintuitive. At some point, I lost all my intuition of
+what was going on and ended up mechanically following the types by
+running a dependent type checker in my head where terms are annotated
+with their de bruijn scopes.
+
+And don't ask me how the direct version even type checks. It's quite
+mind-blowing that despite the program being purely functional, each
+recursive call mutates the type of the continuation. I missed a few
+=prompt0= and I'll probably never know if it's correct until I have
+recovered enough to write some random tests or wait for Rocq to
+support continuations.
