@@ -16,9 +16,13 @@
   (prompt0 (exp-anf-cexp e)))
 
 (define (exp-anf-atom e)
-  (if (atom? e) e
-      (let ([x (gensym 'x)])
-        (control0 k (prompt0 `(let ([,x ,(exp-anf-cexp e)]) ,(prompt0 (k x))))))))
+  (let ([v (exp-anf-cexp e)])
+    (control0 k (prompt0
+                 (cond
+                   [(atom? v) (k v)]
+                   [else
+                    (let ([x (gensym 'x)])
+                      `(let ([,x ,v]) ,(prompt0 (k x))))])))))
 
 #|
 it's quite confusing but for all recursive calls within exp-anf-cexp,
